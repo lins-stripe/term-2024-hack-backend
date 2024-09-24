@@ -33,8 +33,8 @@ async def set_in_db(amount):
 
         # 4. Insert Data
         cursor.execute('''
-            INSERT INTO requests (amount)
-            VALUES (?)
+            REPLACE INTO requests (id, amount)
+            VALUES (1, ?)
         ''', (amount,))
 
         # Commit the changes to the database
@@ -68,6 +68,8 @@ async def access_db(id):
         print("accessed row")
 
         print(rows)
+        if len(rows) == 0:
+            return None
         return rows[-1][0]
 
 
@@ -117,6 +119,11 @@ async def get_amount(websocket):
         return
 
     amount = await access_db(req_json["id"])
+
+    if amount == None:
+        await websocket.send("")
+        return
+    
     await websocket.send(f"{amount}")
     print(f"done")
 
