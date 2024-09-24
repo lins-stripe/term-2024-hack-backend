@@ -42,14 +42,14 @@ async def set_in_db(amount):
 
         # # 5. Query Data
         # # Query the data from the 'users' table to ensure it was inserted correctly
-        cursor.execute('SELECT * FROM requests')
-        rows = cursor.fetchall()  # Fetch all rows from the executed query
+        cursor.execute('SELECT * FROM requests ORDER BY id DESC LIMIT 1')
+        row = cursor.fetchone()  # Fetch all rows from the executed query
+        print(row)
 
-        # # Print out the rows
-        for row in rows:
-            print(row)
+        # return id
+        return[row][0][0]
 
-async def access_db():
+async def access_db(id):
     print("hih")
     with sqlite3.connect('example.db') as connection:
         print("accessing db")
@@ -58,8 +58,8 @@ async def access_db():
 
         # 4. Insert Data
         cursor.execute('''
-            SELECT amount FROM requests 
-        ''')
+            SELECT amount FROM requests WHERE id = ?
+        ''', (id,))
 
         # # 5. Query Data
         # # Query the data from the 'users' table to ensure it was inserted correctly
@@ -71,6 +71,12 @@ async def access_db():
         return rows[-1][0]
 
 
+'''
+input:
+{
+    "amount": <int>
+}
+'''
 async def set_amount(websocket):
     req = await websocket.recv()
     print(f"set_amount recieved {req}")
@@ -82,18 +88,35 @@ async def set_amount(websocket):
         print(f"Received JSON object: {req_json}")
     except json.JSONDecodeError as e:
         print(f"Failed to parse JSON: {e}")
-        await websocket.send("1")
+        await websocket.send("error")
         return
     
-    await set_in_db(req_json["amount"])
+    id = await set_in_db(req_json["amount"])
 
-    await websocket.send("0")
+    await websocket.send(f"{id}")
     print(f"done")
 
+'''
+input:
+{
+    "id": <int>
+}
+'''
 async def get_amount(websocket):
     print(f"get_amount recieved")
-    # await websocket.recv()
-    amount = await access_db()
+    req = await websocket.recv()
+
+    # parse the req json object
+    req_json = {}
+    try:
+        req_json = json.loads(req)
+        print(f"Received JSON object: {req_json}")
+    except json.JSONDecodeError as e:
+        print(f"Failed to parse JSON: {e}")
+        await websocket.send("error")
+        return
+
+    amount = await access_db(req_json["id"])
     await websocket.send(f"{amount}")
     print(f"done")
 
