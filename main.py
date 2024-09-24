@@ -145,7 +145,7 @@ async def handler(websocket):
         return
 
 async def main():
-    async with serve(handler, "localhost", 8765):
+    async with serve(handler, port = 8765):
         await asyncio.get_running_loop().create_future()  # run forever
 
 if __name__ == "__main__":
