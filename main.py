@@ -68,9 +68,18 @@ async def access_db(id):
         print("accessed row")
 
         print(rows)
+        ret_val = None
         if len(rows) == 0:
             return None
-        return rows[-1][0]
+        else:
+            ret_val = rows[-1][0]
+        
+        cursor.execute('''
+            DELETE FROM requests WHERE id = 1
+        ''')
+        connection.commit()
+
+        return ret_val
 
 
 '''
